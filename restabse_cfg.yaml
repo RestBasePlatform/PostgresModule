@@ -1,0 +1,10 @@
+version: 0.1
+min_version: 0.1
+module_name: PostgresModule
+
+functions:
+    common:
+    - essence: healtcheck
+      function_name: healt_check
+      kwargs:
+        kwarg_name2: kwarg_description2
