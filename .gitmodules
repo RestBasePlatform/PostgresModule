@@ -1,0 +1,3 @@
+[submodule "restbase_types"]
+	path = restbase_types
+	url = https://github.com/RestBasePlatform/restbase_types.git
