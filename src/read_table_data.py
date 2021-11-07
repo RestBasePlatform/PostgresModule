@@ -1,16 +1,24 @@
 from collections import namedtuple
+from typing import Dict
 from typing import List
 
 from sqlalchemy import create_engine
 
+from restbase_types import Database
+from restbase_types import DatabaseColumn
 from restbase_types import DatabaseConnectionData
+from restbase_types import DatabaseSchema
 from restbase_types import DatabaseTable
 
 
 GET_TABLE_DATA_REQUEST = """
-        SELECT column_name, data_type, table_schema, table_name FROM information_schema.columns
-    """
+    SELECT column_name, data_type, table_schema, table_name FROM information_schema.columns
+"""
 # where table_schema <> 'pg_catalog' and table_schema <> 'information_schema'
+
+GET_TABLE_LIST_REQUEST = """
+    SELECT table_name FROM information_schema.columns
+"""
 
 GET_TABLE_DATA_REQUEST_NT = namedtuple(
     "GET_TABLE_DATA_REQUEST_NT",
@@ -42,7 +50,26 @@ def read_table_data(con_data: DatabaseConnectionData) -> List[DatabaseTable]:
                 for i in db_engine.execute(GET_TABLE_DATA_REQUEST)
             ]
         )
-        print(columns_list)
+        tables = get_unique_tables(columns_list)
+
+        for column in columns_list:
+            rb_column = DatabaseColumn(column.column_name, column.data_type)
+            tables[
+                f"{column.database}.{column.schema}.{column.table_name}"
+            ].column_list.append(rb_column)
+
+        rb_tables = list(tables.values())
+        return rb_tables
 
 
-read_table_data(_con_data)
+def get_unique_tables(columns: List[GET_TABLE_DATA_REQUEST_NT]) -> Dict:
+    tables = dict()
+    for col in columns:
+        tables[f"{col.database}.{col.schema}.{col.table_name}"] = DatabaseTable(
+            name=col.table_name,
+            schema=DatabaseSchema(col.schema),
+            database=Database(col.database),
+            column_list=[],
+        )
+
+    return tables
